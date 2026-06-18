@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NexusTwin — Industry 6.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#050D1A;--navy2:#0A1628;--navy3:#111F35;
+  --steel:#1A2940;--steel2:#223050;
+  --cyan:#00D4FF;--cyan-dim:rgba(0,212,255,0.12);--cyan-glow:rgba(0,212,255,0.3);
+  --amber:#FF8C00;--amber-dim:rgba(255,140,0,0.12);
+  --teal:#00E5A0;--teal-dim:rgba(0,229,160,0.12);
+  --red:#FF3B5C;--red-dim:rgba(255,59,92,0.12);
+  --purple:#A78BFF;--purple-dim:rgba(167,139,255,0.12);
+  --text:#C8D8E8;--text-dim:#6A8099;--text-bright:#EEF4FA;
+  --border:rgba(0,212,255,0.1);--border2:rgba(0,212,255,0.22);
+  --fh:'Space Grotesk',sans-serif;--fb:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:var(--navy);color:var(--text);font-family:var(--fb);font-size:13px;overflow:hidden;}
+.app{display:grid;grid-template-columns:216px 1fr;grid-template-rows:54px 1fr;height:100vh;}
+
+/* TOPBAR */
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;background:var(--navy2);border-bottom:1px solid var(--border);padding:0 20px;z-index:100;}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text-bright);}
+.logo em{color:var(--cyan);font-style:normal;}
+.logo svg{width:26px;height:26px;}
+.tb-right{display:flex;align-items:center;gap:16px;}
+.status-pill{display:flex;align-items:center;gap:5px;background:var(--teal-dim);border:1px solid rgba(0,229,160,0.28);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.tb-clock{font-family:var(--fm);font-size:11px;color:var(--text-dim);}
+.ib{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-dim);transition:all .15s;position:relative;}
+.ib:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.badge{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:var(--red);border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;border:2px solid var(--navy2);}
+.avatar{width:30px;height:30px;border-radius:7px;background:var(--cyan-dim);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--cyan);cursor:pointer;}
+
+/* SIDEBAR */
+.sidebar{background:var(--navy2);border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column;overflow-y:auto;}
+.sb-section{padding:0 10px;margin-bottom:6px;}
+.sb-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);padding:0 8px 6px;}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--text-dim);font-size:12px;font-weight:500;transition:all .12s;margin:1px 0;border:1px solid transparent;}
+.ni:hover{background:var(--steel);color:var(--text);}
+.ni.active{background:var(--cyan-dim);color:var(--cyan);border-color:rgba(0,212,255,0.18);}
+.ni svg{width:14px;height:14px;flex-shrink:0;}
+.nb{margin-left:auto;min-width:16px;height:16px;padding:0 4px;background:var(--red-dim);border:1px solid rgba(255,59,92,0.28);border-radius:8px;font-size:8px;font-weight:700;color:var(--red);display:flex;align-items:center;justify-content:center;}
+.sb-bottom{margin-top:auto;padding:12px 10px;border-top:1px solid var(--border);}
+.fc{background:var(--steel);border:1px solid var(--border);border-radius:9px;padding:11px;}
+.fc-name{font-family:var(--fh);font-size:11px;font-weight:600;color:var(--text-bright);}
+.fc-sub{font-size:9px;color:var(--text-dim);margin-top:2px;}
+.fc-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;}
+.fc-oee{font-family:var(--fm);font-size:22px;font-weight:500;color:var(--teal);}
+.fc-ol{font-size:9px;color:var(--text-dim);text-align:right;}
+
+/* MAIN */
+.main{overflow-y:auto;background:var(--navy);}
+.page{display:none;padding:18px;flex-direction:column;gap:14px;animation:fadein .2s ease;}
+.page.active{display:flex;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* UTILITIES */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px;}
+.pt{font-family:var(--fh);font-size:20px;font-weight:700;color:var(--text-bright);}
+.ps{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.ha{display:flex;gap:7px;}
+.btn{padding:6px 13px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;font-family:var(--fb);display:flex;align-items:center;gap:5px;}
+.btn-o{background:transparent;border-color:var(--border2);color:var(--text-dim);}
+.btn-o:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.btn-p{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.btn-p:hover{background:rgba(0,212,255,0.2);}
+.btn-a{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);}
+.btn-r{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+.btn-t{background:var(--teal-dim);border-color:var(--teal);color:var(--teal);}
+
+.panel{background:var(--navy2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.ph2{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+.pt2{font-family:var(--fh);font-size:12px;font-weight:600;color:var(--text-bright);}
+.ptag{font-family:var(--fm);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+.pb{padding:14px 16px;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.g3{display:grid;grid-template-columns:2fr 1fr;gap:13px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
+.g32{display:grid;grid-template-columns:3fr 2fr;gap:13px;}
+
+/* KPI */
+.kpi{background:var(--navy2);border:1px solid var(--border);border-radius:11px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s;}
+.kpi:hover{border-color:var(--border2);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi.c::before{background:var(--cyan);}
+.kpi.t::before{background:var(--teal);}
+.kpi.a::before{background:var(--amber);}
+.kpi.r::before{background:var(--red);}
+.kpi-l{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:7px;}
+.kpi-v{font-family:var(--fh);font-size:26px;font-weight:700;color:var(--text-bright);line-height:1;}
+.kpi-v .u{font-size:13px;font-weight:500;color:var(--text-dim);margin-left:2px;}
+.kpi-d{margin-top:5px;font-size:10px;font-weight:500;}
+.up{color:var(--teal);}
+.dn{color:var(--red);}
+.wa{color:var(--amber);}
+.kbar{height:2px;background:var(--steel);border-radius:2px;margin-top:8px;overflow:hidden;}
+.kbf{height:100%;border-radius:2px;}
+
+/* TAGS / CHIPS */
+.chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:1px solid;}
+.chip-c{background:var(--red-dim);color:var(--red);border-color:rgba(255,59,92,0.22);}
+.chip-w{background:var(--amber-dim);color:var(--amber);border-color:rgba(255,140,0,0.22);}
+.chip-i{background:var(--cyan-dim);color:var(--cyan);border-color:rgba(0,212,255,0.22);}
+.chip-t{background:var(--teal-dim);color:var(--teal);border-color:rgba(0,229,160,0.22);}
+.chip-p{background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,255,0.22);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.tbl td{font-size:11px;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tbody tr{cursor:pointer;transition:background .12s;}
+.tbl tbody tr:hover td{background:var(--steel);}
+.mono{font-family:var(--fm);}
+.cyan{color:var(--cyan);}
+.dim{color:var(--text-dim);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--steel2);border-radius:2px;}
+
+/* ═══════════════════════════════════
+   PAGE: OVERVIEW
+═══════════════════════════════════ */
+.asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:13px 15px;}
+.at{background:var(--navy3);border:1px solid var(--border);border-radius:9px;padding:11px;cursor:pointer;transition:all .18s;}
+.at:hover{border-color:var(--border2);background:var(--steel);}
+.at.sel{border-color:var(--cyan);background:var(--cyan-dim);}
+.at-top{display:flex;justify-content:space-between;margin-bottom:6px;}
+.at-id{font-family:var(--fm);font-size:8.5px;color:var(--text-dim);}
+.ast{width:7px;height:7px;border-radius:50%;}
+.ast.ok{background:var(--teal);box-shadow:0 0 5px rgba(0,229,160,.5);}
+.ast.warn{background:var(--amber);box-shadow:0 0 5px rgba(255,140,0,.5);animation:blink .9s infinite;}
+.ast.crit{background:var(--red);box-shadow:0 0 5px rgba(255,59,92,.5);animation:blink .5s infinite;}
+.at-name{font-family:var(--fh);font-size:11px;font-weight:600;color:var(--text);}
+.at-type{font-size:9px;color:var(--text-dim);margin-top:1px;}
+.rul-wrap{margin-top:7px;}
+.rul-lbl{display:flex;justify-content:space-between;font-size:8.5px;color:var(--text-dim);margin-bottom:3px;}
+.rul-bar{height:3px;background:var(--steel2);border-radius:2px;overflow:hidden;}
+.rul-f{height:100%;border-radius:2px;transition:width 1s ease;}
+.rh{background:var(--teal);}
+.rm{background:var(--amber);}
+.rl{background:var(--red);}
+
+.sl{display:flex;flex-direction:column;gap:7px;padding:12px 15px;}
+.sr{display:flex;align-items:center;gap:8px;}
+.sn{font-size:10px;font-weight:500;color:var(--text);width:112px;flex-shrink:0;}
+.st{flex:1;height:26px;position:relative;overflow:hidden;border-radius:3px;background:var(--navy3);}
+.sc{width:100%;height:26px;}
+.sv{font-family:var(--fm);font-size:10px;color:var(--cyan);width:52px;text-align:right;flex-shrink:0;}
+.su{font-size:8.5px;color:var(--text-dim);width:22px;flex-shrink:0;}
+
+.ins{background:linear-gradient(135deg,rgba(0,212,255,.06),rgba(0,229,160,.03));border:1px solid rgba(0,212,255,.18);border-radius:9px;padding:12px;display:flex;gap:10px;margin:0 15px 13px;}
+.ins-i{width:28px;height:28px;border-radius:7px;background:var(--cyan-dim);border:1px solid rgba(0,212,255,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ins-t{font-size:11px;color:var(--text);line-height:1.6;}
+.ins-t strong{color:var(--cyan);font-weight:600;}
+
+.af{display:flex;flex-direction:column;max-height:240px;overflow-y:auto;}
+.ai{display:flex;align-items:flex-start;gap:10px;padding:10px 15px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.ai:hover{background:var(--steel);}
+.ai-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.ai-dot.crit{background:var(--red);}
+.ai-dot.warn{background:var(--amber);}
+.ai-dot.info{background:var(--cyan);}
+.ai-msg{font-size:11px;font-weight:500;color:var(--text);line-height:1.4;}
+.ai-meta{font-size:9px;color:var(--text-dim);margin-top:2px;display:flex;gap:7px;}
+
+/* ═══════════════════════════════════
+   PAGE: DIGITAL TWINS
+═══════════════════════════════════ */
+.twin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+.twin-card{background:var(--navy2);border:1px solid var(--border);border-radius:11px;overflow:hidden;cursor:pointer;transition:all .2s;}
+.twin-card:hover{border-color:var(--border2);}
+.twin-card.active-twin{border-color:var(--cyan);box-shadow:0 0 16px var(--cyan-glow);}
+.tc-header{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.tc-id{font-family:var(--fm);font-size:9px;color:var(--cyan);}
+.tc-canvas-wrap{height:130px;background:var(--navy3);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.twin-canvas{width:100%;height:130px;}
+.tc-body{padding:10px 14px;}
+.tc-param{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.tc-pname{font-size:10px;color:var(--text-dim);}
+.tc-pval{font-family:var(--fm);font-size:11px;font-weight:500;color:var(--text-bright);}
+.sync-tag{position:absolute;bottom:6px;right:8px;font-family:var(--fm);font-size:8px;color:var(--teal);background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.2);border-radius:4px;padding:2px 6px;}
+
+.twin-detail{background:var(--navy2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.td-canvas{width:100%;height:280px;display:block;background:var(--navy3);}
+.td-params{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px;}
+.td-param{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:10px;}
+.td-pl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.td-pv{font-family:var(--fm);font-size:18px;font-weight:500;color:var(--text-bright);}
+.td-pu{font-size:9px;color:var(--text-dim);}
+.td-bar{height:3px;background:var(--steel);border-radius:2px;margin-top:6px;overflow:hidden;}
+.td-bf{height:100%;border-radius:2px;}
+
+/* ═══════════════════════════════════
+   PAGE: SENSOR STREAMS
+═══════════════════════════════════ */
+.sensor-selector{display:flex;gap:8px;flex-wrap:wrap;}
+.ss-chip{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--fb);}
+.ss-chip.on{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.wave-panel{background:var(--navy2);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:2px;}
+.wp-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);}
+.wp-title{font-family:var(--fh);font-size:11px;font-weight:600;color:var(--text);}
+.wp-val{font-family:var(--fm);font-size:13px;font-weight:500;}
+.wp-unit{font-size:9px;color:var(--text-dim);margin-left:2px;}
+.wp-status{font-size:9px;}
+.wave-canvas{width:100%;height:80px;display:block;background:var(--navy3);}
+.wave-foot{display:flex;gap:16px;padding:8px 14px;border-top:1px solid var(--border);}
+.wf-item{font-size:9px;color:var(--text-dim);}
+.wf-item span{font-family:var(--fm);font-size:10px;margin-left:4px;}
+.anomaly-marker{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,59,92,0.6);pointer-events:none;}
+
+/* ═══════════════════════════════════
+   PAGE: ALERTS
+═══════════════════════════════════ */
+.alert-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.afilter{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--fb);}
+.afilter.on{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.alert-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .12s;}
+.alert-row:hover{background:var(--steel);}
+.alert-row.ack{opacity:.5;}
+.ar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ar-dot.crit{background:var(--red);}
+.ar-dot.warn{background:var(--amber);}
+.ar-dot.info{background:var(--cyan);}
+.ar-main{flex:1;min-width:0;}
+.ar-msg{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;}
+.ar-meta{font-size:10px;color:var(--text-dim);margin-top:3px;display:flex;gap:10px;}
+.ar-actions{display:flex;gap:6px;}
+.ar-btn{padding:4px 10px;border-radius:5px;font-size:10px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .12s;font-family:var(--fb);}
+.ar-btn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.ar-btn.ack-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim);}
+.ar-btn.esc-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-dim);}
+
+/* ═══════════════════════════════════
+   PAGE: RUL FORECASTS
+═══════════════════════════════════ */
+.rul-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+.rul-card{background:var(--navy2);border:1px solid var(--border);border-radius:11px;padding:14px;transition:all .2s;}
+.rul-card:hover{border-color:var(--border2);}
+.rc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.rc-id{font-family:var(--fm);font-size:9px;color:var(--cyan);}
+.rc-name{font-family:var(--fh);font-size:13px;font-weight:600;color:var(--text-bright);margin-bottom:2px;}
+.rc-type{font-size:9px;color:var(--text-dim);}
+.rc-rul{text-align:right;}
+.rc-days{font-family:var(--fm);font-size:24px;font-weight:700;line-height:1;}
+.rc-dlbl{font-size:9px;color:var(--text-dim);}
+.rc-gauge{height:6px;background:var(--steel);border-radius:3px;overflow:hidden;margin:10px 0 8px;}
+.rc-gf{height:100%;border-radius:3px;transition:width 1.2s ease;}
+.rc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;}
+.rc-stat{background:var(--navy3);border-radius:6px;padding:7px 8px;}
+.rc-sl{font-size:8.5px;color:var(--text-dim);margin-bottom:2px;}
+.rc-sv{font-family:var(--fm);font-size:11px;font-weight:500;color:var(--text);}
+.rul-chart-wrap{height:160px;padding:0 16px 14px;}
+
+/* ═══════════════════════════════════
+   PAGE: WORK ORDERS
+═══════════════════════════════════ */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;align-items:start;}
+.kb-col{background:var(--navy2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.kb-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.kb-title{font-family:var(--fh);font-size:12px;font-weight:600;color:var(--text-bright);}
+.kb-count{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.kb-body{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:80px;}
+.wo-card{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:11px;cursor:pointer;transition:all .15s;}
+.wo-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.wo-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.wo-id{font-family:var(--fm);font-size:8.5px;color:var(--text-dim);}
+.wo-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px;}
+.wo-asset{font-size:9px;color:var(--cyan);}
+.wo-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.wo-due{font-size:9px;color:var(--text-dim);}
+.wo-tech{width:20px;height:20px;border-radius:50%;background:var(--steel2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:var(--text);}
+.add-wo{width:100%;padding:7px;border-radius:6px;border:1px dashed var(--border2);background:transparent;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--fb);}
+.add-wo:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+
+/* ═══════════════════════════════════
+   PAGE: MAINTENANCE PLAN
+═══════════════════════════════════ */
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+.cal-day-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);text-align:center;padding:6px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-cell{background:var(--navy3);border:1px solid var(--border);border-radius:7px;padding:7px 6px;min-height:72px;cursor:pointer;transition:all .15s;position:relative;}
+.cal-cell:hover{border-color:var(--border2);}
+.cal-cell.today{border-color:var(--cyan);background:var(--cyan-dim);}
+.cal-cell.has-event{border-color:rgba(255,140,0,.25);}
+.cal-num{font-family:var(--fm);font-size:10px;font-weight:500;color:var(--text-dim);margin-bottom:4px;}
+.cal-cell.today .cal-num{color:var(--cyan);}
+.cal-ev{font-size:8.5px;padding:2px 5px;border-radius:3px;margin-bottom:2px;line-height:1.3;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cev-c{background:var(--red-dim);color:var(--red);}
+.cev-w{background:var(--amber-dim);color:var(--amber);}
+.cev-m{background:var(--teal-dim);color:var(--teal);}
+.maint-legend{display:flex;gap:14px;align-items:center;}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
+.ml-dot{width:8px;height:8px;border-radius:2px;}
+
+/* ═══════════════════════════════════
+   PAGE: ROOT CAUSE AI
+═══════════════════════════════════ */
+.rca-select{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.rca-opt{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--fb);}
+.rca-opt.on{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+.shap-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.shap-row:last-child{border-bottom:none;}
+.shap-feat{font-size:11px;color:var(--text);width:160px;flex-shrink:0;}
+.shap-bar-wrap{flex:1;height:16px;background:var(--navy3);border-radius:3px;overflow:hidden;position:relative;}
+.shap-bar{height:100%;border-radius:3px;transition:width 1s ease;}
+.shap-pos{background:linear-gradient(90deg,rgba(255,59,92,.6),var(--red));}
+.shap-neg{background:linear-gradient(90deg,rgba(0,212,255,.6),var(--cyan));}
+.shap-val{font-family:var(--fm);font-size:10px;font-weight:500;width:50px;text-align:right;flex-shrink:0;}
+.fault-tree{padding:16px;}
+.ft-node{display:flex;flex-direction:column;align-items:center;}
+.ft-box{padding:8px 16px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500;text-align:center;white-space:nowrap;cursor:default;}
+.ft-root{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+.ft-mid{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);}
+.ft-leaf{background:var(--navy3);border-color:var(--border);color:var(--text-dim);}
+.ft-line{width:1px;height:20px;background:var(--border2);margin:0 auto;}
+.ft-branch{display:flex;gap:20px;justify-content:center;position:relative;}
+.ft-branch::before{content:'';position:absolute;top:0;left:50px;right:50px;height:1px;background:var(--border2);}
+.ft-sub{display:flex;flex-direction:column;align-items:center;}
+.ft-vert{width:1px;height:18px;background:var(--border2);margin:0 auto;}
+.prob-bar{height:4px;background:var(--steel);border-radius:2px;margin-top:6px;overflow:hidden;width:100%;}
+.prob-f{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--red));}
+.rca-prob{font-family:var(--fm);font-size:9px;color:var(--amber);margin-top:4px;}
+
+/* ═══════════════════════════════════
+   PAGE: TREND ANALYSIS
+═══════════════════════════════════ */
+.trend-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.tc-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--fb);}
+.tc-btn.on{background:var(--purple-dim);border-color:var(--purple);color:var(--purple);}
+.trend-chart-wrap{height:220px;padding:14px 16px;}
+.corr-matrix{display:grid;gap:2px;}
+.cm-cell{border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:9px;font-weight:500;cursor:default;transition:all .15s;}
+.cm-cell:hover{opacity:.8;}
+.cm-label{font-size:9px;color:var(--text-dim);display:flex;align-items:center;padding:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ TOPBAR ══ -->
+<header class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1.5" y="1.5" width="23" height="23" rx="5.5" fill="rgba(0,212,255,0.09)" stroke="rgba(0,212,255,0.35)" stroke-width="1"/>
+      <path d="M5 13h3.5l2-5 3 10 2-6 2 1h3" stroke="#00D4FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Nexus<em>Twin</em>
+  </div>
+  <div class="tb-right">
+    <div class="status-pill"><span class="dot"></span>All systems live</div>
+    <div class="tb-clock" id="clock">--:--:--</div>
+    <div class="ib" title="Notifications"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5a5 5 0 015 5v2.5l1 2H2l1-2V6.5a5 5 0 015-5zM6.5 13.5a1.5 1.5 0 003 0"/></svg><div class="badge">3</div></div>
+    <div class="ib" title="Settings"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.4 3.4l.85.85M11.75 11.75l.85.85M3.4 12.6l.85-.85M11.75 4.25l.85-.85"/></svg></div>
+    <div class="avatar">AK</div>
+  </div>
+</header>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sb-section">
+    <div class="sb-lbl">Monitor</div>
+    <div class="ni active" data-page="overview">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5"/></svg>
+      Overview
+    </div>
+    <div class="ni" data-page="twins">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M5 8h6M8 5v6"/></svg>
+      Digital Twins
+    </div>
+    <div class="ni" data-page="sensors">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12V10l3.5-4L8 9l2.5-6L14 9v3"/></svg>
+      Sensor Streams
+    </div>
+    <div class="ni" data-page="alerts">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5L1.5 14.5h13z"/><path d="M8 6v4M8 11.5v.5"/></svg>
+      Alerts
+      <div class="nb">3</div>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-lbl">Predict</div>
+    <div class="ni" data-page="rul">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 12L5 7l3 3 2.5-5 4 5"/></svg>
+      RUL Forecasts
+    </div>
+    <div class="ni" data-page="workorders">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 3V1.5M11 3V1.5M2 7h12M5.5 10h5"/></svg>
+      Work Orders
+    </div>
+    <div class="ni" data-page="maintplan">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M5 4V2.5M11 4V2.5M2 7.5h12"/></svg>
+      Maintenance Plan
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-lbl">Analyse</div>
+    <div class="ni" data-page="rca">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="5"/><path d="M10.5 10.5L14 14"/></svg>
+      Root Cause AI
+    </div>
+    <div class="ni" data-page="trend">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13L5.5 7 8 10l3-7 3 3"/></svg>
+      Trend Analysis
+    </div>
+  </div>
+  <div class="sb-bottom">
+    <div class="fc">
+      <div class="fc-name">Plant Alpha — Bay 4</div>
+      <div class="fc-sub">Chennai, India · Zone A3</div>
+      <div class="fc-row">
+        <div class="fc-oee" id="oee">91.4%</div>
+        <div class="fc-ol">OEE<br><span style="color:var(--teal);font-size:9px">↑ 2.1%</span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ PAGES ══ -->
+<main class="main">
+
+  <!-- ─── OVERVIEW ─── -->
+  <div class="page active" id="page-overview">
+    <div class="ph">
+      <div><div class="pt">Asset Intelligence</div><div class="ps">12 assets · <span id="sync">just now</span></div></div>
+      <div class="ha">
+        <button class="btn btn-o">+ Add Asset</button>
+        <button class="btn btn-p">↓ Export</button>
+      </div>
+    </div>
+    <div class="g4">
+      <div class="kpi c"><div class="kpi-l">Assets Live</div><div class="kpi-v"><span id="kv1">12</span></div><div class="kpi-d up">↑ 100% online</div><div class="kbar"><div class="kbf" style="width:100%;background:var(--cyan)"></div></div></div>
+      <div class="kpi t"><div class="kpi-l">Avg Health</div><div class="kpi-v"><span id="kv2">84</span><span class="u">/ 100</span></div><div class="kpi-d up">↑ 3pts this week</div><div class="kbar"><div class="kbf" style="width:84%;background:var(--teal)"></div></div></div>
+      <div class="kpi a"><div class="kpi-l">Avg RUL</div><div class="kpi-v"><span id="kv3">38</span><span class="u">days</span></div><div class="kpi-d wa">▼ 2 critical &lt;7d</div><div class="kbar"><div class="kbf" style="width:63%;background:var(--amber)"></div></div></div>
+      <div class="kpi r"><div class="kpi-l">Active Alerts</div><div class="kpi-v"><span id="kv4">3</span></div><div class="kpi-d dn">↑ 2 critical</div><div class="kbar"><div class="kbf" style="width:25%;background:var(--red)"></div></div></div>
+    </div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Asset Health Matrix</div><div class="ptag">Click to inspect</div></div>
+        <div class="asset-grid" id="asset-grid"></div>
+      </div>
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Live Sensor Streams</div><div class="ptag" id="sel-lbl">CNC-07 · Critical</div></div>
+        <div class="sl" id="sensor-list-ov"></div>
+        <div class="ins">
+          <div class="ins-i"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#00D4FF" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 2"/></svg></div>
+          <div class="ins-t" id="ai-insight-text"><strong>AI insight:</strong> Sub-harmonic vibration at 47 Hz rising 12% over 48h. Correlates with bearing inner-race wear pattern. <strong>RUL estimated 6 days</strong> — schedule replacement within 72h.</div>
+        </div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Degradation Trend & RUL Projection</div><div class="ptag">30-day window</div></div>
+        <div style="height:190px;padding:10px 14px"><canvas id="ov-chart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Alert Feed</div><div class="ptag">Live · 3 active</div></div>
+        <div class="af" id="ov-alerts"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph2"><div class="pt2">AI-Scheduled Maintenance Queue</div><div class="ptag">RL-optimised · sorted by urgency</div></div>
+      <div style="overflow-x:auto"><table class="tbl" id="maint-tbl"><thead><tr><th>Asset</th><th>Fault Type</th><th>RUL</th><th>Priority</th><th>Recommended Action</th><th>Confidence</th><th>Scheduled</th></tr></thead><tbody id="maint-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ─── DIGITAL TWINS ─── -->
+  <div class="page" id="page-twins">
+    <div class="ph">
+      <div><div class="pt">Digital Twin Viewer</div><div class="ps">Live-synchronised virtual replicas of all assets</div></div>
+      <div class="ha"><button class="btn btn-o">Simulate Fault</button><button class="btn btn-p">Sync All</button></div>
+    </div>
+    <div class="twin-grid" id="twin-grid"></div>
+    <div class="g32">
+      <div class="twin-detail panel">
+        <div class="ph2"><div class="pt2" id="td-title">CNC Mill #7 — Detailed View</div><div class="ptag">Physics-based FEM model · live sync</div></div>
+        <canvas class="td-canvas" id="td-canvas" width="600" height="280"></canvas>
+        <div class="td-params" id="td-params"></div>
+      </div>
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Twin Health Log</div><div class="ptag">Last 20 events</div></div>
+        <div style="max-height:340px;overflow-y:auto" id="twin-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SENSOR STREAMS ─── -->
+  <div class="page" id="page-sensors">
+    <div class="ph">
+      <div><div class="pt">Sensor Stream Explorer</div><div class="ps">Real-time multi-channel waveform analysis</div></div>
+      <div class="ha">
+        <div class="sensor-selector" id="sens-selector"></div>
+        <button class="btn btn-p" onclick="toggleSensorFreeze()">⏸ Freeze</button>
+      </div>
+    </div>
+    <div id="wave-panels"></div>
+  </div>
+
+  <!-- ─── ALERTS ─── -->
+  <div class="page" id="page-alerts">
+    <div class="ph">
+      <div><div class="pt">Alert Management</div><div class="ps" id="alert-count-label">3 active · 2 acknowledged · 5 total</div></div>
+      <div class="ha">
+        <div class="alert-filters">
+          <button class="afilter on" data-filter="all">All</button>
+          <button class="afilter" data-filter="crit">Critical</button>
+          <button class="afilter" data-filter="warn">Warning</button>
+          <button class="afilter" data-filter="info">Info</button>
+        </div>
+        <button class="btn btn-t" onclick="ackAll()">✓ Ack All</button>
+      </div>
+    </div>
+    <div class="panel"><div id="alert-list"></div></div>
+  </div>
+
+  <!-- ─── RUL FORECASTS ─── -->
+  <div class="page" id="page-rul">
+    <div class="ph">
+      <div><div class="pt">RUL Forecast Dashboard</div><div class="ps">AI-estimated Remaining Useful Life per asset</div></div>
+      <div class="ha"><button class="btn btn-p">↓ Export Forecasts</button></div>
+    </div>
+    <div class="rul-cards" id="rul-cards"></div>
+    <div class="panel">
+      <div class="ph2"><div class="pt2">Multi-Asset RUL Comparison</div><div class="ptag">Forecast confidence bands</div></div>
+      <div class="rul-chart-wrap"><canvas id="rul-compare-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ─── WORK ORDERS ─── -->
+  <div class="page" id="page-workorders">
+    <div class="ph">
+      <div><div class="pt">Work Orders</div><div class="ps">Drag-and-drop maintenance pipeline</div></div>
+      <div class="ha"><button class="btn btn-p" onclick="addWO()">+ New Order</button></div>
+    </div>
+    <div class="kanban" id="kanban"></div>
+    <div class="panel" style="margin-top:0">
+      <div class="ph2"><div class="pt2">Work Order Log</div><div class="ptag">Recent activity</div></div>
+      <div style="overflow-x:auto"><table class="tbl" id="wo-log-tbl"><thead><tr><th>WO#</th><th>Asset</th><th>Task</th><th>Status</th><th>Technician</th><th>Due</th><th>Created</th></tr></thead><tbody id="wo-log-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ─── MAINTENANCE PLAN ─── -->
+  <div class="page" id="page-maintplan">
+    <div class="ph">
+      <div><div class="pt">Maintenance Calendar</div><div class="ps">June 2026 · AI-optimised schedule</div></div>
+      <div class="ha">
+        <div class="maint-legend">
+          <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Critical</div>
+          <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>High</div>
+          <div class="ml-item"><div class="ml-dot" style="background:var(--teal)"></div>Planned</div>
+        </div>
+        <button class="btn btn-p">↓ Export ICS</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph2"><div class="pt2">June 2026</div><div class="ptag">8 scheduled interventions</div></div>
+      <div style="padding:14px">
+        <div class="cal-header" id="cal-header"></div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph2"><div class="pt2">Upcoming Interventions</div><div class="ptag">Next 30 days</div></div>
+      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Asset</th><th>Task</th><th>Type</th><th>Duration</th><th>Tech</th><th>Parts Required</th></tr></thead><tbody id="mp-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ─── ROOT CAUSE AI ─── -->
+  <div class="page" id="page-rca">
+    <div class="ph">
+      <div><div class="pt">Root Cause Analysis</div><div class="ps">SHAP explainability + fault tree decomposition</div></div>
+      <div class="ha"><button class="btn btn-p">↓ Export Report</button></div>
+    </div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph2">
+          <div class="pt2">Fault Analysis Target</div>
+          <div class="rca-select" id="rca-select"></div>
+        </div>
+        <div style="padding:14px 16px 6px">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:10px">SHAP Feature Contributions</div>
+          <div id="shap-rows"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Fault Tree</div><div class="ptag">Bayesian probability decomposition</div></div>
+        <div class="fault-tree" id="fault-tree"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph2"><div class="pt2">AI Diagnostic Summary</div><div class="ptag">GPT-4 class reasoning engine</div></div>
+      <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="rca-summary"></div>
+    </div>
+  </div>
+
+  <!-- ─── TREND ANALYSIS ─── -->
+  <div class="page" id="page-trend">
+    <div class="ph">
+      <div><div class="pt">Trend Analysis</div><div class="ps">Multi-asset cross-correlation & anomaly detection</div></div>
+      <div class="ha">
+        <div class="trend-controls" id="trend-controls"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Multi-Asset Health Trend</div><div class="ptag">30-day window</div></div>
+        <div class="trend-chart-wrap"><canvas id="trend-chart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Vibration Spectrum Comparison</div><div class="ptag">FFT overlay</div></div>
+        <div style="height:220px;padding:10px 14px"><canvas id="fft-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Correlation Matrix</div><div class="ptag">Sensor cross-correlation</div></div>
+        <div style="padding:14px" id="corr-matrix"></div>
+      </div>
+      <div class="panel">
+        <div class="ph2"><div class="pt2">Anomaly Timeline</div><div class="ptag">Last 14 days</div></div>
+        <div style="height:200px;padding:10px 14px"><canvas id="anomaly-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   DATA
+══════════════════════════════════ */
+const ASSETS=[
+  {id:'CNC-07',name:'CNC Mill #7',    type:'5-Axis Milling',  rul:6, health:42,status:'crit'},
+  {id:'ROB-03',name:'Robot Arm 3',    type:'6-DOF Welding',   rul:14,health:68,status:'warn'},
+  {id:'CNV-01',name:'Conveyor A1',    type:'Belt Transport',  rul:45,health:88,status:'ok'},
+  {id:'PMP-09',name:'Hydraulic Pump', type:'High-pressure',   rul:22,health:74,status:'warn'},
+  {id:'CNC-12',name:'CNC Mill #12',   type:'3-Axis Milling',  rul:58,health:91,status:'ok'},
+  {id:'MOT-05',name:'Drive Motor 5',  type:'3-phase AC',      rul:71,health:95,status:'ok'},
+  {id:'CMP-02',name:'Compressor 2',   type:'Reciprocating',   rul:33,health:82,status:'ok'},
+  {id:'ROB-07',name:'Robot Arm 7',    type:'SCARA Sorting',   rul:64,health:93,status:'ok'},
+  {id:'HEX-01',name:'Heat Exchanger', type:'Shell & Tube',    rul:41,health:86,status:'ok'},
+];
+
+const SENSORS=[
+  {name:'Vibration (X)', unit:'g',   base:1.4, noise:.18, color:'#00D4FF'},
+  {name:'Temp — Bearing',unit:'°C',  base:68,  noise:1.8, color:'#FF8C00'},
+  {name:'Acoustic Emit.', unit:'dB', base:74,  noise:2.5, color:'#00E5A0'},
+  {name:'Spindle Current',unit:'A',  base:14.2,noise:.6,  color:'#A78BFF'},
+  {name:'Coolant Flow',  unit:'L/m', base:8.4, noise:.3,  color:'#00D4FF'},
+];
+
+const ALERTS_DATA=[
+  {id:'ALT-001',type:'crit',msg:'CNC-07 bearing inner-race wear — RUL 6 days',asset:'CNC-07',time:'2 min ago',ack:false},
+  {id:'ALT-002',type:'warn',msg:'ROB-03 joint torque variance exceeding 18% threshold',asset:'ROB-03',time:'11 min ago',ack:false},
+  {id:'ALT-003',type:'warn',msg:'PMP-09 suction pressure dropping — cavitation risk onset',asset:'PMP-09',time:'34 min ago',ack:false},
+  {id:'ALT-004',type:'info',msg:'CMP-02 scheduled maintenance window confirmed for Day 33',asset:'CMP-02',time:'1h ago',ack:true},
+  {id:'ALT-005',type:'info',msg:'AI model retrained on 48h sensor batch — accuracy +1.3%',asset:'System',time:'3h ago',ack:true},
+];
+
+const MAINT_DATA=[
+  {asset:'CNC-07',name:'CNC Mill #7',    fault:'Bearing inner-race wear',rul:6, rClass:'rl',priority:'Critical',pClass:'chip-c',action:'Replace bearing pack B-7209',conf:96,sched:'In 5 days'},
+  {asset:'ROB-03',name:'Robot Arm 3',    fault:'Joint 4 torque anomaly',rul:14,rClass:'rm',priority:'High',   pClass:'chip-w',action:'Inspect gear assembly J4',   conf:89,sched:'In 12 days'},
+  {asset:'PMP-09',name:'Hydraulic Pump', fault:'Cavitation onset',       rul:22,rClass:'rm',priority:'High',   pClass:'chip-w',action:'Check inlet filter & pressure',conf:83,sched:'In 20 days'},
+  {asset:'CMP-02',name:'Compressor 2',   fault:'Valve leakage — stage 2',rul:33,rClass:'rm',priority:'Medium', pClass:'chip-i',action:'Replace valve assembly V2',    conf:81,sched:'In 30 days'},
+  {asset:'CNV-01',name:'Conveyor A1',    fault:'Belt elongation drift',  rul:45,rClass:'rh',priority:'Medium', pClass:'chip-i',action:'Tension adjustment cycle',      conf:78,sched:'In 40 days'},
+];
+
+/* ══════════════════════════════════
+   NAV
+══════════════════════════════════ */
+let currentPage='overview';
+document.querySelectorAll('.ni').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const page=el.dataset.page;
+    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    currentPage=page;
+    onPageShow(page);
+  });
+});
+
+function onPageShow(p){
+  if(p==='overview') rebuildOverviewChart();
+  if(p==='twins') buildTwins();
+  if(p==='sensors') buildSensors();
+  if(p==='rul') buildRUL();
+  if(p==='workorders') buildKanban();
+  if(p==='maintplan') buildCalendar();
+  if(p==='rca') buildRCA();
+  if(p==='trend') buildTrend();
+}
+
+/* CLOCK */
+setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour12:false}); },1000);
+
+/* ══════════════════════════════════
+   OVERVIEW
+══════════════════════════════════ */
+let selAsset=0;
+const sensorHistory=SENSORS.map(()=>Array(60).fill(0));
+const sensorCtxsOv=[];
+
+function buildAssetGrid(){
+  const g=document.getElementById('asset-grid'); g.innerHTML='';
+  ASSETS.forEach((a,i)=>{
+    const pct=Math.round((a.rul/90)*100);
+    const fc=a.rul<14?'rl':a.rul<30?'rm':'rh';
+    const d=document.createElement('div');
+    d.className='at'+(i===selAsset?' sel':'');
+    d.innerHTML=`<div class="at-top"><div class="at-id">${a.id}</div><div class="ast ${a.status}"></div></div><div class="at-name">${a.name}</div><div class="at-type">${a.type}</div><div class="rul-wrap"><div class="rul-lbl"><span>RUL</span><span>${a.rul}d</span></div><div class="rul-bar"><div class="rul-f ${fc}" style="width:${pct}%"></div></div></div>`;
+    d.addEventListener('click',()=>{ selAsset=i; buildAssetGrid(); updateOvSensors(); updateInsight(); });
+    g.appendChild(d);
+  });
+}
+
+function buildOvSensorList(){
+  const list=document.getElementById('sensor-list-ov'); list.innerHTML=''; sensorCtxsOv.length=0;
+  SENSORS.forEach((s,i)=>{
+    const row=document.createElement('div'); row.className='sr';
+    const canvas=document.createElement('canvas'); canvas.className='sc'; canvas.width=200; canvas.height=26;
+    const nm=document.createElement('div'); nm.className='sn'; nm.textContent=s.name;
+    const track=document.createElement('div'); track.className='st'; track.appendChild(canvas);
+    const val=document.createElement('div'); val.className='sv'; val.id=`ov-sv-${i}`; val.textContent=s.base.toFixed(1);
+    const unit=document.createElement('div'); unit.className='su'; unit.textContent=s.unit;
+    row.appendChild(nm); row.appendChild(track); row.appendChild(val); row.appendChild(unit);
+    list.appendChild(row);
+    sensorCtxsOv.push(canvas.getContext('2d'));
+  });
+}
+
+function updateOvSensors(){
+  const a=ASSETS[selAsset];
+  document.getElementById('sel-lbl').textContent=`${a.id} · ${a.status==='crit'?'Critical':a.status==='warn'?'Warning':'Active'}`;
+  const sm=a.status==='crit'?2.2:a.status==='warn'?1.4:1;
+  SENSORS.forEach((s,i)=>{
+    const v=s.base+(Math.random()-.5)*s.noise*2*sm;
+    sensorHistory[i].push(v); sensorHistory[i].shift();
+    const el=document.getElementById(`ov-sv-${i}`); if(el) el.textContent=v.toFixed(1);
+    if(sensorCtxsOv[i]) drawSpark(sensorCtxsOv[i],sensorHistory[i],s.color,s.base-s.noise*3,s.base+s.noise*3*sm);
+  });
+}
+
+function drawSpark(ctx,data,color,mn,mx){
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const pts=data.map((v,i)=>({x:(i/(data.length-1))*W,y:H-((v-mn)/(mx-mn+.001))*(H-4)-2}));
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle=color; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fillStyle='rgba(0,212,255,0.07)'; ctx.fill();
+}
+
+const INSIGHTS=[
+  '<strong>AI insight:</strong> Sub-harmonic vibration at 47 Hz rising 12% over 48h. Correlates with bearing inner-race wear. <strong>RUL: 6 days</strong> — replacement within 72h.',
+  '<strong>AI insight:</strong> ROB-03 joint 4 torque shows 18% variance against baseline. Gear backlash consistent with early wear. <strong>Action: inspect within 12 days.</strong>',
+  '<strong>AI insight:</strong> CNV-01 belt tension 3% below spec. Elongation rate within normal bounds. <strong>Low risk — monitor weekly.</strong>',
+  '<strong>AI insight:</strong> PMP-09 suction pressure trending down 8% over 5 days. Inlet filter restriction likely. <strong>Inspect filter before Day 22.</strong>',
+];
+
+function updateInsight(){
+  const el=document.getElementById('ai-insight-text');
+  if(el) el.innerHTML=INSIGHTS[Math.min(selAsset,INSIGHTS.length-1)];
+}
+
+function buildOvAlerts(){
+  const f=document.getElementById('ov-alerts'); f.innerHTML='';
+  ALERTS_DATA.slice(0,5).forEach(a=>{
+    const d=document.createElement('div'); d.className='ai';
+    const tagCls=a.type==='crit'?'chip-c':a.type==='warn'?'chip-w':'chip-i';
+    d.innerHTML=`<div class="ai-dot ${a.type}"></div><div><div class="ai-msg">${a.msg}</div><div class="ai-meta"><span class="chip ${tagCls}">${a.type}</span><span>${a.asset}</span><span>${a.time}</span></div></div>`;
+    f.appendChild(d);
+  });
+}
+
+function buildMaintTable(){
+  const tbody=document.getElementById('maint-tbody'); tbody.innerHTML='';
+  MAINT_DATA.forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="mono cyan">${m.asset}</span><br><span class="dim" style="font-size:9px">${m.name}</span></td><td>${m.fault}</td><td><span class="mono ${m.rClass}">${m.rul}d</span></td><td><span class="chip ${m.pClass}">${m.priority}</span></td><td>${m.action}</td><td><span class="mono" style="color:var(--teal)">${m.conf}%</span></td><td class="dim">${m.sched}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+let ovChart=null;
+function rebuildOverviewChart(){
+  const ctx=document.getElementById('ov-chart'); if(!ctx) return;
+  if(ovChart){ ovChart.destroy(); ovChart=null; }
+  const days=Array.from({length:30},(_,i)=>i-15);
+  const labels=days.map(d=>d===0?'Today':d>0?`+${d}d`:`${d}d`);
+  const actual=days.map(d=>d<0?Math.max(0,0.98-Math.abs(d)*0.007+Math.random()*.015):null);
+  const pred=days.map(d=>d>=0?Math.max(0,0.98-(d+15)*0.007+(Math.random()-.5)*.01):null);
+  ovChart=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'Actual',data:actual,borderColor:'#00E5A0',borderWidth:1.5,pointRadius:0,tension:.4,fill:false},
+    {label:'Predicted',data:pred,borderColor:'#00D4FF',borderDash:[4,3],borderWidth:1.5,pointRadius:0,tension:.4,fill:false},
+    {label:'Threshold',data:days.map(()=>0.4),borderColor:'rgba(255,59,92,.45)',borderDash:[2,4],borderWidth:1,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0A1628',titleColor:'#C8D8E8',bodyColor:'#6A8099',borderColor:'rgba(0,212,255,.18)',borderWidth:1}},scales:{x:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8},maxTicksLimit:8}},y:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8},callback:v=>Math.round(v*100)+'%'},min:0,max:1.05}}}});
+}
+
+/* ══════════════════════════════════
+   DIGITAL TWINS
+══════════════════════════════════ */
+let activeTwin=0;
+let twinAnimId=null;
+const twinParams=[
+  [{l:'Spindle Speed',v:3200,u:'rpm',pct:64},{l:'Bearing Temp',v:72,u:'°C',pct:72},{l:'Vibration RMS',v:2.8,u:'g',pct:90},{l:'Coolant Flow',v:8.1,u:'L/m',pct:81},{l:'Health Score',v:42,u:'%',pct:42},{l:'Est. RUL',v:6,u:'days',pct:7}],
+  [{l:'Joint 4 Torque',v:118,u:'Nm',pct:79},{l:'Temp — Joint',v:61,u:'°C',pct:61},{l:'Position Error',v:0.8,u:'mm',pct:53},{l:'Cycle Time',v:4.2,u:'s',pct:70},{l:'Health Score',v:68,u:'%',pct:68},{l:'Est. RUL',v:14,u:'days',pct:16}],
+  [{l:'Belt Speed',v:1.8,u:'m/s',pct:72},{l:'Motor Temp',v:48,u:'°C',pct:48},{l:'Belt Tension',v:4.1,u:'kN',pct:82},{l:'Load Cell',v:210,u:'kg',pct:70},{l:'Health Score',v:88,u:'%',pct:88},{l:'Est. RUL',v:45,u:'days',pct:50}],
+];
+
+function buildTwins(){
+  const g=document.getElementById('twin-grid'); g.innerHTML='';
+  ASSETS.slice(0,6).forEach((a,i)=>{
+    const c=document.createElement('div');
+    c.className='twin-card'+(i===activeTwin?' active-twin':'');
+    c.innerHTML=`<div class="tc-header"><span class="mono cyan" style="font-size:9px">${a.id}</span><span class="chip ${a.status==='crit'?'chip-c':a.status==='warn'?'chip-w':'chip-t'}">${a.status}</span></div><div class="tc-canvas-wrap"><canvas class="twin-canvas" id="tc-cv-${i}" width="240" height="130"></canvas><div class="sync-tag">● LIVE</div></div><div class="tc-body"><div class="tc-param"><span class="tc-pname">Health</span><span class="tc-pval" style="color:${a.health<50?'var(--red)':a.health<75?'var(--amber)':'var(--teal)'}">${a.health}%</span></div><div class="tc-param"><span class="tc-pname">RUL</span><span class="tc-pval">${a.rul} days</span></div><div class="tc-param"><span class="tc-pname">Model</span><span class="tc-pval dim" style="font-size:9px">FEM v2.4</span></div></div>`;
+    c.addEventListener('click',()=>{ activeTwin=i; buildTwins(); drawTwinDetail(); buildTwinLog(); });
+    g.appendChild(c);
+    drawMiniTwin(document.getElementById(`tc-cv-${i}`).getContext('2d'),a,i);
+  });
+  drawTwinDetail();
+  buildTwinLog();
+}
+
+function drawMiniTwin(ctx,asset,idx){
+  const W=240,H=130;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,212,255,0.15)'; ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const cx=W/2,cy=H/2;
+  const color=asset.status==='crit'?'#FF3B5C':asset.status==='warn'?'#FF8C00':'#00E5A0';
+  if(idx%3===0){
+    ctx.strokeStyle=color; ctx.lineWidth=1.5;
+    ctx.strokeRect(cx-40,cy-28,80,56);
+    ctx.strokeRect(cx-28,cy-18,56,36);
+    for(let a2=0;a2<8;a2++){
+      const ang=(a2/8)*Math.PI*2, r=38;
+      ctx.beginPath(); ctx.arc(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r,3,0,Math.PI*2);
+      ctx.fillStyle=color+'55'; ctx.fill(); ctx.strokeStyle=color; ctx.stroke();
+    }
+  } else if(idx%3===1){
+    ctx.strokeStyle=color; ctx.lineWidth=1.5;
+    const segs=[[cx,cy,cx+36,cy-22],[cx+36,cy-22,cx+52,cy-8],[cx+52,cy-8,cx+40,cy+16],[cx,cy,cx-36,cy-22],[cx-36,cy-22,cx-20,cy-40]];
+    segs.forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x2,y2,4,0,Math.PI*2); ctx.fillStyle=color+'44'; ctx.fill(); ctx.strokeStyle=color; ctx.stroke();
+    });
+  } else {
+    ctx.strokeStyle=color; ctx.lineWidth=1.5;
+    ctx.strokeRect(cx-52,cy-14,104,28);
+    for(let r2=0;r2<5;r2++){
+      const rx=cx-40+r2*20, ry=cy-14;
+      ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx,ry-10);
+      ctx.strokeStyle=color+'88'; ctx.lineWidth=1; ctx.stroke();
+    }
+  }
+  ctx.fillStyle=color+'22'; ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=color; ctx.lineWidth=1.2; ctx.stroke();
+}
+
+function drawTwinDetail(){
+  const a=ASSETS[activeTwin];
+  document.getElementById('td-title').textContent=`${a.name} — Detailed View`;
+  const canvas=document.getElementById('td-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#111F35'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,212,255,0.08)'; ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const color=a.status==='crit'?'#FF3B5C':a.status==='warn'?'#FF8C00':'#00E5A0';
+  const cx=W/2,cy=H/2;
+  ctx.strokeStyle=color; ctx.lineWidth=2;
+  if(activeTwin%3===0){
+    ctx.strokeRect(cx-80,cy-55,160,110);
+    ctx.strokeRect(cx-56,cy-38,112,76);
+    ctx.strokeRect(cx-18,cy-18,36,36);
+    for(let i=0;i<12;i++){
+      const ang=(i/12)*Math.PI*2,r=70;
+      ctx.beginPath(); ctx.arc(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r,5,0,Math.PI*2);
+      ctx.fillStyle=color+'33'; ctx.fill(); ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(cx,cy,18,0,Math.PI*2); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle=color+'22'; ctx.fill();
+    ctx.strokeStyle='rgba(0,212,255,0.3)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.strokeRect(cx-90,cy-65,180,130); ctx.setLineDash([]);
+  } else if(activeTwin%3===1){
+    const joints=[[cx,cy+60],[cx,cy],[cx+70,cy-20],[cx+100,cy+10],[cx+80,cy+50],[cx-70,cy-20],[cx-100,cy-50]];
+    ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    for(let i=0;i<joints.length-1;i++){
+      if(i===4) continue;
+      ctx.beginPath(); ctx.moveTo(joints[i][0],joints[i][1]); ctx.lineTo(joints[i+1][0],joints[i+1][1]); ctx.stroke();
+    }
+    joints.forEach(([jx,jy],i)=>{
+      ctx.beginPath(); ctx.arc(jx,jy,i===0?10:7,0,Math.PI*2);
+      ctx.fillStyle=color+'30'; ctx.fill(); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke();
+    });
+  } else {
+    ctx.strokeRect(cx-120,cy-28,240,56);
+    for(let r=0;r<8;r++){
+      const rx=cx-105+r*30, ry=cy-28;
+      ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx,ry-18);
+      ctx.strokeStyle=color+'77'; ctx.lineWidth=1; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.rect(cx-10,cy-6,20,12); ctx.fillStyle=color+'22'; ctx.fill(); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke();
+  }
+  ctx.fillStyle=color; ctx.font='bold 11px JetBrains Mono, monospace';
+  ctx.fillText(`TWIN SYNC ● ${a.id}`,14,20);
+  ctx.fillStyle='rgba(0,212,255,.5)'; ctx.font='10px JetBrains Mono, monospace';
+  ctx.fillText(`Health: ${a.health}%  |  RUL: ${a.rul}d  |  Status: ${a.status.toUpperCase()}`,14,36);
+
+  const params=document.getElementById('td-params'); params.innerHTML='';
+  (twinParams[activeTwin%twinParams.length]||twinParams[0]).forEach(p=>{
+    const pct=p.pct;
+    const c2=pct<40?'var(--red)':pct<70?'var(--amber)':'var(--teal)';
+    const d=document.createElement('div'); d.className='td-param';
+    d.innerHTML=`<div class="td-pl">${p.l}</div><div><span class="td-pv">${p.v}</span><span class="td-pu" style="margin-left:4px">${p.u}</span></div><div class="td-bar"><div class="td-bf" style="width:${pct}%;background:${c2}"></div></div>`;
+    params.appendChild(d);
+  });
+}
+
+function buildTwinLog(){
+  const log=document.getElementById('twin-log'); log.innerHTML='';
+  const events=[
+    {t:'14:32:01',msg:'State sync completed — 847 parameters updated',type:'info'},
+    {t:'14:31:58',msg:'Vibration anomaly detected — confidence 94%',type:'warn'},
+    {t:'14:31:45',msg:'RUL recalculated: 6.2 → 6.0 days',type:'warn'},
+    {t:'14:30:11',msg:'Thermal model updated with ambient correction',type:'info'},
+    {t:'14:28:44',msg:'Bearing frequency signature: 47.2 Hz (inner race)',type:'crit'},
+    {t:'14:25:30',msg:'Coolant temperature nominal — 38.2°C',type:'info'},
+    {t:'14:20:18',msg:'AI model inference completed in 12ms',type:'info'},
+    {t:'14:15:09',msg:'Digital twin health check — all modules active',type:'info'},
+  ];
+  events.forEach(e=>{
+    const d=document.createElement('div');
+    d.className='ai';
+    const c=e.type==='crit'?'chip-c':e.type==='warn'?'chip-w':'chip-i';
+    d.innerHTML=`<div class="ai-dot ${e.type}"></div><div><div class="ai-msg" style="font-size:11px">${e.msg}</div><div class="ai-meta"><span class="mono" style="font-size:9px">${e.t}</span></div></div>`;
+    log.appendChild(d);
+  });
+}
+
+/* ══════════════════════════════════
+   SENSOR STREAMS
+══════════════════════════════════ */
+const waveHistory=SENSORS.map(()=>Array(200).fill(0));
+const waveCtxs=[];
+let sensorFrozen=false;
+let activeSensors=[0,1,2,3,4];
+
+function buildSensors(){
+  const sel=document.getElementById('sens-selector'); sel.innerHTML='';
+  SENSORS.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='ss-chip'+(activeSensors.includes(i)?' on':'');
+    b.textContent=s.name;
+    b.style.borderColor=activeSensors.includes(i)?s.color:'';
+    b.style.color=activeSensors.includes(i)?s.color:'';
+    b.style.background=activeSensors.includes(i)?s.color+'18':'';
+    b.addEventListener('click',()=>{
+      if(activeSensors.includes(i)) activeSensors=activeSensors.filter(x=>x!==i);
+      else activeSensors.push(i);
+      buildSensors();
+    });
+    sel.appendChild(b);
+  });
+
+  const wp=document.getElementById('wave-panels'); wp.innerHTML=''; waveCtxs.length=0;
+  activeSensors.forEach(i=>{
+    const s=SENSORS[i];
+    const panel=document.createElement('div'); panel.className='wave-panel';
+    panel.innerHTML=`<div class="wp-head"><div class="wp-title">${s.name}</div><div><span class="wp-val" id="wv-${i}" style="color:${s.color}">${s.base.toFixed(1)}</span><span class="wp-unit">${s.unit}</span></div><span class="wp-status" id="ws-${i}" style="color:var(--teal)">● Normal</span></div><canvas id="wc-${i}" style="width:100%;height:80px;display:block;background:var(--navy3)" width="900" height="80"></canvas><div class="wave-foot"><div class="wf-item">Min<span id="wmn-${i}">${(s.base-s.noise*2).toFixed(1)}</span></div><div class="wf-item">Max<span id="wmx-${i}">${(s.base+s.noise*2).toFixed(1)}</span></div><div class="wf-item">Avg<span id="wav-${i}">${s.base.toFixed(1)}</span></div><div class="wf-item">Anomalies<span id="wam-${i}" style="color:var(--red)">0</span></div></div>`;
+    wp.appendChild(panel);
+    const canvas=document.getElementById(`wc-${i}`);
+    waveCtxs.push({i,ctx:canvas.getContext('2d'),s});
+  });
+}
+
+function updateWaves(){
+  if(sensorFrozen) return;
+  activeSensors.forEach(i=>{
+    const s=SENSORS[i]; const sm=i<2?2.1:1;
+    const v=s.base+(Math.random()-.5)*s.noise*2*sm+Math.sin(Date.now()/800+i)*s.noise*.5;
+    waveHistory[i].push(v); waveHistory[i].shift();
+    const vEl=document.getElementById(`wv-${i}`); if(vEl) vEl.textContent=v.toFixed(2);
+    const hist=waveHistory[i];
+    const mn=Math.min(...hist.filter(x=>x>0)), mx=Math.max(...hist);
+    const avg=hist.filter(x=>x>0).reduce((a,b)=>a+b,0)/hist.filter(x=>x>0).length;
+    const mnEl=document.getElementById(`wmn-${i}`); if(mnEl) mnEl.textContent=mn.toFixed(1);
+    const mxEl=document.getElementById(`wmx-${i}`); if(mxEl) mxEl.textContent=mx.toFixed(1);
+    const avEl=document.getElementById(`wav-${i}`); if(avEl) avEl.textContent=avg.toFixed(1);
+    const isAnom=v>s.base+s.noise*3;
+    const wsEl=document.getElementById(`ws-${i}`);
+    if(wsEl){ wsEl.textContent=isAnom?'⚠ Anomaly':'● Normal'; wsEl.style.color=isAnom?'var(--red)':'var(--teal)'; }
+    const entry=waveCtxs.find(x=>x.i===i);
+    if(entry) drawWave(entry.ctx,waveHistory[i],s.color,mn*0.95,mx*1.05);
+  });
+}
+
+function drawWave(ctx,data,color,mn,mx){
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,212,255,0.06)'; ctx.lineWidth=.5;
+  [.25,.5,.75].forEach(f=>{ctx.beginPath();ctx.moveTo(0,H*f);ctx.lineTo(W,H*f);ctx.stroke();});
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=(i/(data.length-1))*W, y=H-((v-mn)/(mx-mn+.001))*(H-4)-2;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fillStyle=color+'14'; ctx.fill();
+}
+
+window.toggleSensorFreeze=()=>{ sensorFrozen=!sensorFrozen; };
+
+/* ══════════════════════════════════
+   ALERTS
+══════════════════════════════════ */
+let alertFilter='all';
+
+function buildAlertList(){
+  const list=document.getElementById('alert-list'); list.innerHTML='';
+  const filtered=alertFilter==='all'?ALERTS_DATA:ALERTS_DATA.filter(a=>a.type===alertFilter);
+  filtered.forEach(a=>{
+    const row=document.createElement('div'); row.className='alert-row'+(a.ack?' ack':'');
+    const tc=a.type==='crit'?'chip-c':a.type==='warn'?'chip-w':'chip-i';
+    row.innerHTML=`<div class="ar-dot ${a.type}"></div><div class="ar-main"><div class="ar-msg">${a.msg}</div><div class="ar-meta"><span class="chip ${tc}">${a.type}</span><span>${a.asset}</span><span>${a.time}</span>${a.ack?'<span style="color:var(--teal)">✓ Acknowledged</span>':''}</div></div><div class="ar-actions"><button class="ar-btn ack-btn" onclick="ackAlert('${a.id}')">${a.ack?'Unack':'Ack'}</button><button class="ar-btn esc-btn" onclick="escalate('${a.id}')">Escalate</button></div>`;
+    list.appendChild(row);
+  });
+  const active=ALERTS_DATA.filter(a=>!a.ack).length;
+  const acked=ALERTS_DATA.filter(a=>a.ack).length;
+  const lbl=document.getElementById('alert-count-label');
+  if(lbl) lbl.textContent=`${active} active · ${acked} acknowledged · ${ALERTS_DATA.length} total`;
+}
+
+window.ackAlert=(id)=>{
+  const a=ALERTS_DATA.find(x=>x.id===id); if(a) a.ack=!a.ack;
+  buildAlertList();
+};
+window.escalate=(id)=>{
+  const a=ALERTS_DATA.find(x=>x.id===id); if(a){ a.type='crit'; a.msg='[ESCALATED] '+a.msg.replace('[ESCALATED] ',''); }
+  buildAlertList();
+};
+window.ackAll=()=>{ ALERTS_DATA.forEach(a=>a.ack=true); buildAlertList(); };
+
+document.querySelectorAll('.afilter').forEach(b=>{
+  b.addEventListener('click',()=>{
+    alertFilter=b.dataset.filter;
+    document.querySelectorAll('.afilter').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    buildAlertList();
+  });
+});
+
+/* ══════════════════════════════════
+   RUL FORECASTS
+══════════════════════════════════ */
+let rulCompareChart=null;
+
+function buildRUL(){
+  const cards=document.getElementById('rul-cards'); cards.innerHTML='';
+  ASSETS.forEach(a=>{
+    const pct=Math.round((a.rul/90)*100);
+    const color=a.rul<14?'var(--red)':a.rul<30?'var(--amber)':'var(--teal)';
+    const sc=a.status==='crit'?'chip-c':a.status==='warn'?'chip-w':'chip-t';
+    const d=document.createElement('div'); d.className='rul-card';
+    d.innerHTML=`<div class="rc-top"><div><div class="mono cyan" style="font-size:9px;margin-bottom:3px">${a.id}</div><div class="rc-name">${a.name}</div><div class="rc-type">${a.type}</div></div><div class="rc-rul"><div class="rc-days" style="color:${color}">${a.rul}</div><div class="rc-dlbl">days RUL</div><div style="margin-top:5px"><span class="chip ${sc}">${a.status}</span></div></div></div><div class="rc-gauge"><div class="rc-gf" style="width:${pct}%;background:${color}"></div></div><div class="rc-stats"><div class="rc-stat"><div class="rc-sl">Confidence</div><div class="rc-sv" style="color:${color}">${85+Math.round(Math.random()*10)}%</div></div><div class="rc-stat"><div class="rc-sl">Model</div><div class="rc-sv">LSTM</div></div><div class="rc-stat"><div class="rc-sl">Updated</div><div class="rc-sv">${Math.round(Math.random()*5+1)}m ago</div></div></div>`;
+    cards.appendChild(d);
+  });
+
+  if(rulCompareChart){ rulCompareChart.destroy(); rulCompareChart=null; }
+  const ctx=document.getElementById('rul-compare-chart'); if(!ctx) return;
+  const days=Array.from({length:20},(_,i)=>i);
+  rulCompareChart=new Chart(ctx,{type:'line',data:{labels:days.map(d=>`+${d}d`),datasets:ASSETS.slice(0,5).map((a,i)=>({label:a.id,data:days.map(d=>Math.max(0,a.rul-d+(Math.random()-.5)*2)),borderColor:['#FF3B5C','#FF8C00','#00E5A0','#00D4FF','#A78BFF'][i],borderWidth:1.5,pointRadius:0,tension:.4,fill:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6A8099',font:{size:9}}}},scales:{x:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8}}},y:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8},callback:v=>v+'d'},title:{display:true,text:'Remaining Useful Life (days)',color:'#6A8099',font:{size:9}}}}}});
+}
+
+/* ══════════════════════════════════
+   WORK ORDERS
+══════════════════════════════════ */
+const WO_DATA={
+  open:[
+    {id:'WO-2214',title:'Replace bearing pack B-7209',asset:'CNC-07',priority:'chip-c',pLabel:'Critical',due:'Jun 21',tech:'RK'},
+    {id:'WO-2215',title:'Inspect hydraulic inlet filter',asset:'PMP-09',priority:'chip-w',pLabel:'High',due:'Jun 26',tech:'SP'},
+  ],
+  inprog:[
+    {id:'WO-2210',title:'Joint 4 gear assembly inspection',asset:'ROB-03',priority:'chip-w',pLabel:'High',due:'Jun 28',tech:'AK'},
+    {id:'WO-2211',title:'Compressor valve V2 replacement',asset:'CMP-02',priority:'chip-i',pLabel:'Medium',due:'Jul 2',tech:'TM'},
+  ],
+  done:[
+    {id:'WO-2204',title:'Belt tension adjustment A1',asset:'CNV-01',priority:'chip-t',pLabel:'Low',due:'Jun 14',tech:'SP'},
+    {id:'WO-2206',title:'Motor 5 thermal paste reapply',asset:'MOT-05',priority:'chip-t',pLabel:'Low',due:'Jun 12',tech:'RK'},
+    {id:'WO-2208',title:'Coolant system flush & refill',asset:'HEX-01',priority:'chip-i',pLabel:'Medium',due:'Jun 10',tech:'TM'},
+  ]
+};
+
+function buildKanban(){
+  const kb=document.getElementById('kanban'); kb.innerHTML='';
+  const cols=[
+    {key:'open',label:'Open',color:'var(--amber)',bg:'var(--amber-dim)'},
+    {key:'inprog',label:'In Progress',color:'var(--cyan)',bg:'var(--cyan-dim)'},
+    {key:'done',label:'Done',color:'var(--teal)',bg:'var(--teal-dim)'},
+  ];
+  cols.forEach(col=>{
+    const c=document.createElement('div'); c.className='kb-col';
+    const items=WO_DATA[col.key];
+    c.innerHTML=`<div class="kb-head"><div class="kb-title">${col.label}</div><div class="kb-count" style="background:${col.bg};color:${col.color}">${items.length}</div></div><div class="kb-body" id="kb-${col.key}"></div>`;
+    kb.appendChild(c);
+    const body=c.querySelector('.kb-body');
+    items.forEach(wo=>{
+      const card=document.createElement('div'); card.className='wo-card';
+      card.innerHTML=`<div class="wo-top"><span class="mono dim" style="font-size:8.5px">${wo.id}</span><span class="chip ${wo.priority}" style="font-size:8px">${wo.pLabel}</span></div><div class="wo-title">${wo.title}</div><div class="wo-asset">${wo.asset}</div><div class="wo-foot"><span class="wo-due">Due: ${wo.due}</span><div class="wo-tech">${wo.tech}</div></div>`;
+      card.addEventListener('click',()=>alert(`Work Order ${wo.id}\n\nAsset: ${wo.asset}\nTask: ${wo.title}\nDue: ${wo.due}\nTechnician: ${wo.tech}`));
+      body.appendChild(card);
+    });
+    if(col.key!=='done'){
+      const add=document.createElement('button'); add.className='add-wo'; add.textContent='+ Add Work Order';
+      add.addEventListener('click',()=>{ window.addWO(); });
+      body.appendChild(add);
+    }
+  });
+  buildWOLog();
+}
+
+function buildWOLog(){
+  const tbody=document.getElementById('wo-log-tbody'); if(!tbody) return; tbody.innerHTML='';
+  const all=[...WO_DATA.open,...WO_DATA.inprog,...WO_DATA.done];
+  all.forEach(wo=>{
+    const status=WO_DATA.open.includes(wo)?'Open':WO_DATA.inprog.includes(wo)?'In Progress':'Done';
+    const sc=status==='Open'?'chip-w':status==='In Progress'?'chip-i':'chip-t';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="mono cyan">${wo.id}</td><td class="mono" style="font-size:10px">${wo.asset}</td><td>${wo.title}</td><td><span class="chip ${sc}">${status}</span></td><td>${wo.tech}</td><td class="dim">${wo.due}</td><td class="dim">Jun 2026</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+window.addWO=()=>{
+  const id='WO-'+Math.floor(2200+Math.random()*100);
+  WO_DATA.open.unshift({id,title:'New maintenance task',asset:'TBD',priority:'chip-i',pLabel:'Medium',due:'TBD',tech:'—'});
+  buildKanban();
+};
+
+/* ══════════════════════════════════
+   MAINTENANCE PLAN
+══════════════════════════════════ */
+const CAL_EVENTS={
+  5:[{label:'CNC-07 Bearing',cls:'cev-c'}],
+  12:[{label:'ROB-03 Joint',cls:'cev-w'},{label:'PMP-09 Filter',cls:'cev-w'}],
+  18:[{label:'CMP-02 Valve',cls:'cev-m'}],
+  21:[{label:'CNV-01 Belt',cls:'cev-m'}],
+  24:[{label:'MOT-05 Thermal',cls:'cev-m'}],
+  28:[{label:'ROB-07 Calibration',cls:'cev-m'}],
+  30:[{label:'HEX-01 Flush',cls:'cev-m'}],
+};
+
+function buildCalendar(){
+  const head=document.getElementById('cal-header'); head.innerHTML='';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{
+    const el=document.createElement('div'); el.className='cal-day-label'; el.textContent=d; head.appendChild(el);
+  });
+  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
+  const firstDay=1; // June 2026 starts on Monday
+  for(let i=0;i<firstDay-1;i++){
+    const blank=document.createElement('div'); blank.className='cal-cell'; blank.style.opacity='.2'; grid.appendChild(blank);
+  }
+  for(let d=1;d<=30;d++){
+    const cell=document.createElement('div');
+    cell.className='cal-cell'+(d===16?' today':'')+(CAL_EVENTS[d]?' has-event':'');
+    let html=`<div class="cal-num">${d}</div>`;
+    if(CAL_EVENTS[d]) CAL_EVENTS[d].forEach(ev=>{ html+=`<div class="cal-ev ${ev.cls}">${ev.label}</div>`; });
+    cell.innerHTML=html; grid.appendChild(cell);
+  }
+
+  const tbody=document.getElementById('mp-tbody'); if(!tbody) return; tbody.innerHTML='';
+  const events=[
+    {date:'Jun 21',asset:'CNC-07',task:'Replace bearing pack B-7209',type:'Critical',dur:'4h',tech:'RK',parts:'B-7209 × 2, Grease 500g'},
+    {date:'Jun 28',asset:'ROB-03',task:'Inspect & replace gear J4',type:'High',dur:'3h',tech:'AK',parts:'Gear set GS-44, Torque sensor'},
+    {date:'Jun 28',asset:'PMP-09',task:'Clean inlet filter, check pressure',type:'High',dur:'1.5h',tech:'SP',parts:'Filter element F-09'},
+    {date:'Jul 2', asset:'CMP-02',task:'Replace valve assembly V2',type:'Medium',dur:'2h',tech:'TM',parts:'Valve V2-C, O-rings'},
+    {date:'Jul 5', asset:'CNV-01',task:'Belt tension adjustment',type:'Medium',dur:'1h',tech:'SP',parts:'Tension gauge, Lubricant'},
+    {date:'Jul 10',asset:'MOT-05',task:'Thermal compound reapplication',type:'Low',dur:'0.5h',tech:'RK',parts:'Thermal paste 100g'},
+  ];
+  events.forEach(e=>{
+    const tc=e.type==='Critical'?'chip-c':e.type==='High'?'chip-w':e.type==='Medium'?'chip-i':'chip-t';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="mono" style="font-size:10px;color:var(--cyan)">${e.date}</td><td class="mono" style="font-size:10px">${e.asset}</td><td>${e.task}</td><td><span class="chip ${tc}">${e.type}</span></td><td class="dim">${e.dur}</td><td>${e.tech}</td><td class="dim" style="font-size:10px">${e.parts}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ══════════════════════════════════
+   ROOT CAUSE AI
+══════════════════════════════════ */
+let rcaTarget=0;
+const RCA_TARGETS=['CNC-07 — Bearing','ROB-03 — Joint 4','PMP-09 — Pump'];
+const SHAP_DATA=[
+  [{f:'Sub-harmonic vibration',v:.41,pos:true},{f:'Bearing temperature',v:.28,pos:true},{f:'Acoustic emission 47Hz',v:.22,pos:true},{f:'Spindle current draw',v:.12,pos:true},{f:'Coolant temperature',v:-.06,pos:false},{f:'Coolant flow rate',v:-.09,pos:false}],
+  [{f:'Joint torque variance',v:.38,pos:true},{f:'Position error (Z)',v:.24,pos:true},{f:'Motor current J4',v:.19,pos:true},{f:'Cycle time deviation',v:.11,pos:true},{f:'Ambient temperature',v:-.05,pos:false},{f:'Vibration (normal)',v:-.08,pos:false}],
+  [{f:'Suction pressure drop',v:.44,pos:true},{f:'Flow rate reduction',v:.26,pos:true},{f:'Inlet vacuum reading',v:.18,pos:true},{f:'Pump current draw',v:.09,pos:true},{f:'Discharge pressure',v:-.07,pos:false},{f:'Outlet temperature',v:-.04,pos:false}],
+];
+
+function buildRCA(){
+  const sel=document.getElementById('rca-select'); sel.innerHTML='';
+  RCA_TARGETS.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.className='rca-opt'+(i===rcaTarget?' on':'');
+    b.textContent=t;
+    b.addEventListener('click',()=>{ rcaTarget=i; buildRCA(); });
+    sel.appendChild(b);
+  });
+
+  const shapRows=document.getElementById('shap-rows'); shapRows.innerHTML='';
+  SHAP_DATA[rcaTarget].forEach(r=>{
+    const row=document.createElement('div'); row.className='shap-row';
+    const pct=Math.round(r.v*200);
+    row.innerHTML=`<div class="shap-feat">${r.f}</div><div class="shap-bar-wrap"><div class="shap-bar ${r.pos?'shap-pos':'shap-neg'}" style="width:${pct}%"></div></div><div class="shap-val" style="color:${r.pos?'var(--red)':'var(--cyan)'}">${r.pos?'+':'-'}${r.v.toFixed(2)}</div>`;
+    shapRows.appendChild(row);
+  });
+
+  const ft=document.getElementById('fault-tree');
+  const faults=[['Bearing Failure','Inner Race Wear','Inadequate Lubrication','Elevated Temperature'],
+                 ['Joint Failure','Gear Wear','Position Error','Torque Overload'],
+                 ['Pump Cavitation','Inlet Restriction','Pressure Loss','Flow Reduction']];
+  const f=faults[rcaTarget];
+  ft.innerHTML=`<div class="ft-node"><div class="ft-box ft-root">${f[0]}</div><div class="ft-line"></div><div class="ft-branch"><div class="ft-sub"><div class="ft-vert"></div><div class="ft-box ft-mid">${f[1]}</div><div class="ft-vert"></div><div class="ft-box ft-leaf">${f[2]}</div></div><div class="ft-sub"><div class="ft-vert"></div><div class="ft-box ft-mid">${f[2]}</div><div class="ft-vert"></div><div class="ft-box ft-leaf">${f[3]}</div></div></div></div>`;
+
+  const summ=document.getElementById('rca-summary'); summ.innerHTML='';
+  const summaries=[
+    [{l:'Root Cause',v:'Inner-race bearing wear from lubrication starvation',c:'var(--red)'},{l:'Contributing Factors',v:'Elevated temp + high-freq vibration signature at 47 Hz',c:'var(--amber)'},{l:'Recommended Fix',v:'Replace B-7209 bearing pack, flush lubrication circuit',c:'var(--teal)'}],
+    [{l:'Root Cause',v:'Joint 4 gear backlash from gradual wear over 8,200 cycles',c:'var(--red)'},{l:'Contributing Factors',v:'Torque spikes > 130 Nm + position error trending upward',c:'var(--amber)'},{l:'Recommended Fix',v:'Replace gear assembly GS-44, recalibrate joint encoder',c:'var(--teal)'}],
+    [{l:'Root Cause',v:'Inlet filter restriction causing suction-side cavitation',c:'var(--red)'},{l:'Contributing Factors',v:'Flow rate -12%, suction vacuum at 85% of cavitation threshold',c:'var(--amber)'},{l:'Recommended Fix',v:'Replace filter F-09, inspect impeller for pitting damage',c:'var(--teal)'}],
+  ][rcaTarget];
+  summaries.forEach(s=>{
+    const d=document.createElement('div');
+    d.style.cssText='background:var(--navy3);border:1px solid var(--border);border-radius:9px;padding:14px;';
+    d.innerHTML=`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${s.c};margin-bottom:6px">${s.l}</div><div style="font-size:12px;color:var(--text);line-height:1.6">${s.v}</div>`;
+    summ.appendChild(d);
+  });
+}
+
+/* ══════════════════════════════════
+   TREND ANALYSIS
+══════════════════════════════════ */
+let trendChart=null, fftChart=null, anomChart=null;
+let trendAssets=[0,1,2];
+
+function buildTrend(){
+  const ctrl=document.getElementById('trend-controls'); ctrl.innerHTML='';
+  ASSETS.slice(0,6).forEach((a,i)=>{
+    const b=document.createElement('button');
+    b.className='tc-btn'+(trendAssets.includes(i)?' on':'');
+    b.textContent=a.id;
+    b.addEventListener('click',()=>{
+      if(trendAssets.includes(i)) trendAssets=trendAssets.filter(x=>x!==i);
+      else trendAssets.push(i);
+      buildTrend();
+    });
+    ctrl.appendChild(b);
+  });
+
+  if(trendChart){trendChart.destroy();trendChart=null;}
+  if(fftChart){fftChart.destroy();fftChart=null;}
+  if(anomChart){anomChart.destroy();anomChart=null;}
+
+  const days=Array.from({length:30},(_,i)=>i+1);
+  const colors=['#FF3B5C','#FF8C00','#00E5A0','#00D4FF','#A78BFF','#FFD700'];
+  const ctx=document.getElementById('trend-chart');
+  if(ctx) trendChart=new Chart(ctx,{type:'line',data:{labels:days.map(d=>`D${d}`),datasets:trendAssets.map(i=>({label:ASSETS[i].id,data:days.map(d=>Math.max(20,ASSETS[i].health-(d*.3+Math.random()*4-2))),borderColor:colors[i],borderWidth:1.5,pointRadius:0,tension:.4,fill:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6A8099',font:{size:9}}}},scales:{x:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8}}},y:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8},callback:v=>v+'%'},min:0,max:100}}}});
+
+  const freqs=Array.from({length:80},(_,i)=>(i+1)*2);
+  const fftCtx=document.getElementById('fft-chart');
+  if(fftCtx) fftChart=new Chart(fftCtx,{type:'line',data:{labels:freqs.map(f=>f+'Hz'),datasets:trendAssets.map(i=>({label:ASSETS[i].id,data:freqs.map(f=>{ const base=Math.random()*.3; const peak1=Math.exp(-Math.pow(f-47,2)/40)*2.8*(i===0?2.2:1); const peak2=Math.exp(-Math.pow(f-94,2)/60)*.8; return base+peak1+peak2; }),borderColor:colors[i],borderWidth:1.2,pointRadius:0,tension:.1,fill:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6A8099',font:{size:9}}}},scales:{x:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8},maxTicksLimit:12}},y:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8}}}}}});
+
+  buildCorrMatrix();
+
+  const aCtx=document.getElementById('anomaly-chart');
+  const aLabels=Array.from({length:14},(_,i)=>`Jun ${i+3}`);
+  if(aCtx) anomChart=new Chart(aCtx,{type:'bar',data:{labels:aLabels,datasets:[{label:'Anomalies',data:aLabels.map(()=>Math.floor(Math.random()*6)),backgroundColor:aLabels.map(()=>Math.random()>.7?'rgba(255,59,92,.7)':'rgba(255,140,0,.5)'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8}}},y:{grid:{color:'rgba(0,212,255,.05)'},ticks:{color:'#6A8099',font:{size:8},stepSize:1}}}}});
+}
+
+function buildCorrMatrix(){
+  const labels=['Vibration','Temp','Acoustic','Current','Flow'];
+  const n=labels.length;
+  const corr=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:(Math.random()>.5?1:-1)*(.3+Math.random()*.7)));
+  const cm=document.getElementById('corr-matrix'); if(!cm) return;
+  const size=38;
+  const grid=document.createElement('div');
+  grid.style.cssText=`display:grid;grid-template-columns:80px repeat(${n},${size}px);gap:2px;`;
+  const blank=document.createElement('div'); grid.appendChild(blank);
+  labels.forEach(l=>{ const d=document.createElement('div'); d.className='cm-label'; d.style.cssText=`font-size:8.5px;color:var(--text-dim);writing-mode:vertical-lr;height:${size}px;justify-content:center;`; d.textContent=l; grid.appendChild(d); });
+  labels.forEach((rl,i)=>{
+    const row=document.createElement('div'); row.className='cm-label'; row.style.cssText=`font-size:8.5px;color:var(--text-dim);width:80px;justify-content:flex-end;padding-right:6px;height:${size}px;`; row.textContent=rl; grid.appendChild(row);
+    labels.forEach((_,j)=>{
+      const v=corr[i][j]; const abs=Math.abs(v);
+      const r=v>0?Math.round(abs*59):0, gb=v>0?0:Math.round(abs*212);
+      const d=document.createElement('div'); d.className='cm-cell';
+      d.style.cssText=`width:${size}px;height:${size}px;background:rgba(${v>0?'255,59,92':'0,212,255'},${abs*.7});`;
+      d.title=`${rl} × ${labels[j]}: ${v.toFixed(2)}`;
+      d.textContent=v.toFixed(1);
+      d.style.color=abs>.5?'#fff':'rgba(255,255,255,.5)';
+      grid.appendChild(d);
+    });
+  });
+  cm.innerHTML=''; cm.appendChild(grid);
+}
+
+/* ══════════════════════════════════
+   TIMERS & INIT
+══════════════════════════════════ */
+// OEE flicker
+setInterval(()=>{ const o=document.getElementById('oee'); if(o) o.textContent=(90+Math.random()*3).toFixed(1)+'%'; },3500);
+
+// Main sensor update loop
+setInterval(()=>{
+  if(currentPage==='overview') updateOvSensors();
+  if(currentPage==='sensors') updateWaves();
+},750);
+
+// Init overview
+buildAssetGrid();
+buildOvSensorList();
+buildOvAlerts();
+buildMaintTable();
+setTimeout(rebuildOverviewChart,100);
+setTimeout(updateOvSensors,200);
+
+// Init alerts page (pre-build so it's ready)
+setTimeout(buildAlertList,300);
+</script>
+</body>
+</html>
